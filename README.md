@@ -1,19 +1,19 @@
-## Berlin Locals - Map
+## Berlin Asian Food - Map
 
-This project is taking [data about local businesses](https://daten.berlin.de/datensaetze/gastronomien-laden-und-andere-gesch%C3%A4fte-mit-liefer-und-abholservice) from the [Berlin Open Data](https://daten.berlin.de) project and displays it in a customizable map that can be embedded on a website.
+This project is taking [data about asian restaurants and grocery stores](https://www.google.com/maps/d/u/0/viewer?mid=19x9ImgaXJqmdcaOYLMozS9lG-XW5pFT2) from [Athena Lam](https://shenchingtou.github.io/2020/asian-businesses-berlin-covid19.html) and displays it in a customizable map that can be embedded on a website.
 
 You can embed the map on your own website by adding the following code:
 
 ```html
 <div id="mapid" style="height: 200px;"></div>
-<script src="https://cdn.jsdelivr.net/gh/r-dent/BerlinLocals@master/map.js" onload="new LocalBusinessMap('mapid')"></script>
+<script src="https://cdn.jsdelivr.net/gh/r-dent/BerlinAsianFoodMap@master/map.js" onload="new LocalBusinessMap('mapid')"></script>
 ```
 
 If you want to customize the map, you can pass some options to the initializer.
 
 ```html
 <div id="mapid" style="height: 200px;"></div>
-<script src="https://cdn.jsdelivr.net/gh/r-dent/BerlinLocals@master/map.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/r-dent/BerlinAsianFoodMap@master/map.js"></script>
 <script>
     var localsMap = new LocalBusinessMap('mapid', {
         mapBoxKey: 'your_mapbox_key',
@@ -59,4 +59,4 @@ If you want to customize the map, you can pass some options to the initializer.
 </script>
  ```
 
-Please [file an issue](https://github.com/r-dent/BerlinLocals/issues/new) or [contact me](https://romangille.com/#contact) if you have feedback.
+Please [file an issue](https://github.com/r-dent/BerlinAsianFoodMap/issues/new) or [contact me](https://romangille.com/#contact) if you have feedback.

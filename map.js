@@ -27,7 +27,7 @@ class LocalBusinessMap {
         this.categoryLayers = [];
         this.map = undefined
         this.isLocal = location.hostname == 'localhost'
-        this.repositoryBaseUrl = 'https://cdn.jsdelivr.net/gh/r-dent/BerlinLocals@master/'
+        this.repositoryBaseUrl = 'https://cdn.jsdelivr.net/gh/r-dent/BerlinAsianFoodMap@master/'
         this.clusterZoom = options.clusterBelowZoom 
         this.clusterLayer = undefined
         this.useClustering = (this.clusterZoom !== undefined && typeof(this.clusterZoom) == 'number')
@@ -42,7 +42,7 @@ class LocalBusinessMap {
         mapContainer.innerHTML = '<div id="loading"><svg height="100" width="100" class="spinner"><circle cx="50" cy="50" r="20" class="inner-circle" /></svg></div>'
         
         const resourceVersionTag = '20200413-2'
-        const dataUrl = 'https://www.berlin.de/sen/web/service/liefer-und-abholdienste/index.php/index/all.gjson?q='
+        const dataUrl = (this.isLocal ? '' : this.repositoryBaseUrl) +'data/Berlin_Asian_Restaurants_Grocery_Stores.geojson?v='+ resourceVersionTag
         const cssUrl = (this.isLocal ? '' : this.repositoryBaseUrl) +'map-style.css?v='+ resourceVersionTag
 
         DocumentHelper.loadCss(cssUrl)
@@ -68,8 +68,7 @@ class LocalBusinessMap {
 
         if (mapBoxKey !== undefined && typeof(mapBoxKey) == 'string' && mapBoxKey.length > 0) {
             // Use Mapbox if key is provided.
-            const mapboxAttribution = 'Data by <a href="https://daten.berlin.de/datensaetze/gastronomien-laden-und-andere-gesch%C3%A4fte-mit-liefer-und-abholservice" target="_blank">Berlin Open Data</a> | ' +
-            '<a href="https://github.com/r-dent/BerlinLocals" target="_blank">Code</a> on GitHub' +
+            const mapboxAttribution = '<a href="https://github.com/r-dent/BerlinAsianFoodMap" target="_blank">Code</a> on GitHub' +
             '<br>Map data &copy; <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> contributors, ' +
             '<a href="https://creativecommons.org/licenses/by-sa/2.0/" target="_blank">CC-BY-SA</a>, ' + 
             'Imagery © <a href="https://www.mapbox.com/" target="_blank">Mapbox</a>'
@@ -101,7 +100,7 @@ class LocalBusinessMap {
         var addButton = L.control({position: 'bottomright'});
         addButton.onAdd = (map) => {
             var div = L.DomUtil.create('div', 'add-entry')
-            div.innerHTML = '<a href="https://citylabberlin.typeform.com/to/QjhJbt" target="_blank"><i class="fa fa-plus"></i> Unternehmen hinzufügen</a>'
+            div.innerHTML = '<a href="https://hackmd.io/C7UtXN8vTHqt2LWLamc3rw" target="_blank"><i class="fa fa-plus"></i> Add business</a>'
             return div
         };
         addButton.addTo(map);
@@ -111,40 +110,27 @@ class LocalBusinessMap {
 
     showMarkerPopup(feature, layer) {
 
-        const data = feature.properties.data
-        const title = data.name
+        const data = feature.properties
+        const title = data.Name
         const coord = feature.geometry.coordinates
-        const addressString = data.strasse_nr +' '+ data.plz +' Berlin'
+        const addressString = title +' Berlin'
         var texts = [data.angebot]
-        var contactInfos = []
-        const address = '<a onclick="GeoHelper.navigate('+ coord[1] +','+ coord[0] +',\''+ addressString +'\')" class="directions-link"><i class="fa fa-directions"></i></a>'+ 
-            data.strasse_nr +'<br>'+ data.plz +' Berlin'
 
-        if (data.beschreibung_lieferangebot != '') {
-            texts.push('<strong>Lieferung:</strong> '+ data.beschreibung_lieferangebot)
+        if (data.description !== undefined && data.description != '') {
+            texts.push(data.description)
         }
-        if (data.angebot_selbstabholung != '') {
-            texts.push('<strong>Abholung:</strong> '+ data.angebot_selbstabholung)
-        }
+        
+        const address = '<a onclick="GeoHelper.navigate('+ coord[1] +','+ coord[0] +',\''+ addressString +'\')" class="directions-link"><i class="fa fa-directions"></i></a>Navigate:'
 
-        if (data.w3 != '') {
-            contactInfos.push('Web: <a href="'+ data.w3 +'" target="_blank">'+ data.w3 +'</a>')
-        }
-        if (data.mail != '') {
-            contactInfos.push('Mail: <a href="mailto:'+ data.mail +'">'+ data.mail +'</a>')
-        }
-        if (data.fon != '') {
-            contactInfos.push('Phone: <a href="tel:'+ data.fon +'">'+ data.fon +'</a>')
-        }
         layer.bindPopup(
-            '<h3>'+ title +'</h3><p>'+ texts.join('</p><p>') +'</p><p>'+ contactInfos.join('<br>') +'</p><p>'+ address +'</p>'
+            '<h3>'+ title +'</h3><p>'+ texts.join('</p><p>') +'</p><p>'+ address +'</p>'
         )
     }
 
     renderMapMarker(geoJsonPoint, coordinatate) {
 
         var image = 'other'
-        switch (geoJsonPoint.properties.data.art) {
+        switch (geoJsonPoint.properties.category) {
             case 'Baumarkt': image = 'hardwarestore'; break;
             case 'Blumenladen': image = 'flowers'; break;
             case 'Buchhandlung': image = 'books'; break;
@@ -167,7 +153,7 @@ class LocalBusinessMap {
             shadowAnchor: [7, -13]
         });
         return L.marker(coordinatate, {icon: icon})
-            .bindTooltip(geoJsonPoint.properties.data.name, {offset: [0, 16]})
+            .bindTooltip(geoJsonPoint.properties.Name, {offset: [0, 16]})
     }
 
     renderClusterMarker(cluster) {
@@ -185,7 +171,7 @@ class LocalBusinessMap {
 
             const addClusterLayer = (layers, map) => {
                 var markers = L.markerClusterGroup({
-                    disableClusteringAtZoom: 15,
+                    disableClusteringAtZoom: this.clusterZoom,
                     iconCreateFunction: (cluster) => this.renderClusterMarker(cluster)
                 });
                 for (const id in layers) {
@@ -217,7 +203,7 @@ class LocalBusinessMap {
                 onEachFeature: this.showMarkerPopup,
                 pointToLayer: (point, coord) => this.renderMapMarker(point, coord),
                 filter: function(feature, layer) {
-                    return feature.properties.data.art == category
+                    return feature.properties.category == category
                 }
             })
             this.categoryLayers[category] = geoLayer
@@ -264,10 +250,6 @@ class LocalBusinessMap {
 
         for (const index in geoJson.features) {
             var feature = geoJson.features[index]
-            // Clean values.
-            for (const key in feature.properties.data) {
-                feature.properties.data[key] = feature.properties.data[key].trim()
-            }
             // Filter by distance.
             const distanceToCityCenter = geo.distance(this.cityCenter, [feature.geometry.coordinates[1], feature.geometry.coordinates[0]])
             if (distanceToCityCenter < 30) {
@@ -276,8 +258,7 @@ class LocalBusinessMap {
                 continue
             }
             // Build categories.
-            const category = feature.properties.data.art.split(' (')[0];
-            feature.properties.data.art = category
+            const category = feature.properties.category;
             distinctCategories.add(category)
         }
         this.categories = Array.from(distinctCategories).sort()
